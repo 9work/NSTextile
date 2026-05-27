@@ -1,45 +1,3 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional
-import os
-import json
-import streamlit.components.v1 as components
-from streamlit_theme import st_theme
-
-APP_DIR = Path(__file__).resolve().parent
-LIGHT_LOGO = APP_DIR / "assets" / "ns_logo.png"
-DARK_LOGO = APP_DIR / "assets" / "ns_logo_dark.png"
-
-_THEME_CHECKED = False
-_THEME_VALUE = False
-
-def _is_dark_theme() -> bool:
-    global _THEME_CHECKED, _THEME_VALUE
-    if not _THEME_CHECKED:
-        try:
-            theme = st_theme(key="ns_dashboard_theme")
-            if theme and isinstance(theme, dict):
-                _THEME_VALUE = str(theme.get("base", "")).lower() == "dark"
-        except Exception:
-            pass
-        _THEME_CHECKED = True
-    return _THEME_VALUE
-
-
-def _active_logo_path() -> Optional[Path]:
-    if LIGHT_LOGO.is_file() and DARK_LOGO.is_file():
-        return DARK_LOGO if _is_dark_theme() else LIGHT_LOGO
-    if LIGHT_LOGO.is_file():
-        return LIGHT_LOGO
-    if DARK_LOGO.is_file():
-        return DARK_LOGO
-    return None
-
-
 def render_dashboard_header(title: str, logo_width: int = 110):
     logo_path = _active_logo_path()
 
@@ -58,15 +16,25 @@ def render_dashboard_header(title: str, logo_width: int = 110):
     badge_border = "1px solid rgba(129, 140, 248, 0.3)" if is_dark else "1px solid rgba(99, 102, 241, 0.2)"
     badge_color = "#818cf8" if is_dark else "#4f46e5"
 
+    # --- حل المشكلة هنا: تجهيز الأكواد الفرعية في متغيرات منفصلة بدون علامات مائلة عكسية ---
+    badge_html = ""
+    if date_badge:
+        badge_html = f'<span style="background: {badge_bg}; border: {badge_border}; color: {badge_color}; padding: 4px 14px; border-radius: 20px; font-family: \'Outfit\', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">{date_badge}</span>'
+
+    sub_title_html = ""
+    if sub_title:
+        sub_title_html = f'<div style="font-family: \'Outfit\', \'Cairo\', sans-serif; font-size: 15px; font-weight: 600; color: {sub_color}; letter-spacing: 0.2px; display: flex; align-items: center; gap: 6px; margin-top: 6px;"><span class="material-symbols-rounded" style="font-size: 18px; color: {badge_color};">insights</span> {sub_title}</div>'
+    # ----------------------------------------------------------------------------------
+
     html_content = f"""
     <div style="display: flex; flex-direction: column; justify-content: center; padding: 4px 0;">
         <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
             <h1 style="font-family: 'Outfit', 'Cairo', sans-serif; font-size: 34px; font-weight: 800; margin: 0; padding: 0; background: {title_gradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; letter-spacing: -0.5px;">
                 {main_title}
             </h1>
-            {"<span style='background: " + badge_bg + "; border: " + badge_border + "; color: " + badge_color + "; padding: 4px 14px; border-radius: 20px; font-family: \"Outfit\", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);'>" + date_badge + "</span>" if date_badge else ""}
+            {badge_html}
         </div>
-        {"<div style='font-family: \"Outfit\", \"Cairo\", sans-serif; font-size: 15px; font-weight: 600; color: " + sub_color + "; letter-spacing: 0.2px; display: flex; align-items: center; gap: 6px; margin-top: 6px;'><span class='material-symbols-rounded' style='font-size: 18px; color: " + badge_color + ";'>insights</span> " + sub_title + "</div>" if sub_title else ""}
+        {sub_title_html}
     </div>
     """
 
