@@ -1,51 +1,48 @@
+import streamlit as st
+# import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Optional
+import os
+import json
+import streamlit.components.v1 as components
+from streamlit_theme import st_theme
+
+APP_DIR = Path(__file__).resolve().parent
+LIGHT_LOGO = APP_DIR / "assets" / "ns_logo.png"
+DARK_LOGO = APP_DIR / "assets" / "ns_logo_dark.png"
+
+
+def _is_dark_theme() -> bool:
+    theme = st_theme(key="ns_dashboard_theme")
+    if theme and isinstance(theme, dict):
+        return str(theme.get("base", "")).lower() == "dark"
+    return False
+
+
+def _active_logo_path() -> Optional[Path]:
+    if LIGHT_LOGO.is_file() and DARK_LOGO.is_file():
+        return DARK_LOGO if _is_dark_theme() else LIGHT_LOGO
+    if LIGHT_LOGO.is_file():
+        return LIGHT_LOGO
+    if DARK_LOGO.is_file():
+        return DARK_LOGO
+    return None
+
+
 def render_dashboard_header(title: str, logo_width: int = 110):
     logo_path = _active_logo_path()
-
-    # Fix typo and parse title parts gracefully
-    clean_title = title.replace("Dashbard", "Dashboard")
-    parts = [p.strip() for p in clean_title.split("|")]
-    
-    main_title = parts[0] if len(parts) > 0 else clean_title
-    sub_title = parts[1] if len(parts) > 1 else ""
-    date_badge = parts[2] if len(parts) > 2 else ""
-
-    is_dark = _is_dark_theme()
-    title_gradient = "linear-gradient(135deg, #f8fafc, #cbd5e1)" if is_dark else "linear-gradient(135deg, #0f172a, #4f46e5)"
-    sub_color = "#94a3b8" if is_dark else "#64748b"
-    badge_bg = "rgba(129, 140, 248, 0.15)" if is_dark else "rgba(99, 102, 241, 0.08)"
-    badge_border = "1px solid rgba(129, 140, 248, 0.3)" if is_dark else "1px solid rgba(99, 102, 241, 0.2)"
-    badge_color = "#818cf8" if is_dark else "#4f46e5"
-
-    # --- حل المشكلة هنا: تجهيز الأكواد الفرعية في متغيرات منفصلة بدون علامات مائلة عكسية ---
-    badge_html = ""
-    if date_badge:
-        badge_html = f'<span style="background: {badge_bg}; border: {badge_border}; color: {badge_color}; padding: 4px 14px; border-radius: 20px; font-family: \'Outfit\', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">{date_badge}</span>'
-
-    sub_title_html = ""
-    if sub_title:
-        sub_title_html = f'<div style="font-family: \'Outfit\', \'Cairo\', sans-serif; font-size: 15px; font-weight: 600; color: {sub_color}; letter-spacing: 0.2px; display: flex; align-items: center; gap: 6px; margin-top: 6px;"><span class="material-symbols-rounded" style="font-size: 18px; color: {badge_color};">insights</span> {sub_title}</div>'
-    # ----------------------------------------------------------------------------------
-
-    html_content = f"""
-    <div style="display: flex; flex-direction: column; justify-content: center; padding: 4px 0;">
-        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-            <h1 style="font-family: 'Outfit', 'Cairo', sans-serif; font-size: 34px; font-weight: 800; margin: 0; padding: 0; background: {title_gradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; letter-spacing: -0.5px;">
-                {main_title}
-            </h1>
-            {badge_html}
-        </div>
-        {sub_title_html}
-    </div>
-    """
 
     if logo_path:
         col_logo, col_title = st.columns([0.4, 7], vertical_alignment="center", gap="small")
         with col_logo:
             st.image(str(logo_path), width=logo_width)
         with col_title:
-            st.markdown(html_content, unsafe_allow_html=True)
+            st.title(title)
     else:
-        st.markdown(html_content, unsafe_allow_html=True)
+        st.title(title)
 
 
 def section_header(icon_name, title):
@@ -2261,103 +2258,100 @@ setTimeout(()=>animateBars(topLabels,topValues,topColors),500);
 
     # Define active toggle button styles dynamically based on the active mode
     if st.session_state.bp_view_mode == "sales":
-        btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
-        btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.4)"
-        container_bg = "#0f172a"
-        container_border = "1px solid rgba(99, 102, 241, 0.3)"
+        btn_bg = "linear-gradient(135deg, #0f172a, #1e293b)"
+        btn_shadow = "0 4px 12px rgba(15, 23, 42, 0.4)"
+        container_border = "1px solid rgba(15, 23, 42, 0.3)"
     else:
-        btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
-        btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.4)"
-        container_bg = "#0f172a"
-        container_border = "1px solid rgba(20, 184, 166, 0.3)"
+        btn_bg = "linear-gradient(135deg, #8b6f47, #a18256)"
+        btn_shadow = "0 4px 12px rgba(139, 111, 71, 0.4)"
+        container_border = "1px solid rgba(139, 111, 71, 0.3)"
 
-    sel = 'div[data-testid="stVerticalBlock"] > div:has(.bp-toggle-container-marker) + div div[data-testid="stHorizontalBlock"]'
-
-    toggle_css = f"""<style>
+    toggle_css = """<style>
     /* Container style for the toggle group */
-    {sel} {{
-        background: {container_bg} !important;
-        border: {container_border} !important;
-        padding: 6px !important;
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] {
+        background: #0f172a !important;
+        border: __BORDER__ !important;
+        padding: 4px !important;
         border-radius: 12px !important;
         display: inline-flex !important;
-        gap: 8px !important;
+        gap: 4px !important;
         width: auto !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-    }}
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+    }
     
     /* Ensure columns do not stretch and stay inline */
-    {sel} div[data-testid="stColumn"] {{
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
         width: auto !important;
         flex: none !important;
-    }}
+    }
     
     /* Standardize button dimensions and typography */
-    {sel} button {{
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] button {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 8px !important;
-        height: 40px !important;
-        padding: 0 24px !important;
+        height: 38px !important;
+        padding: 0 20px !important;
         font-family: 'Outfit', 'Cairo', sans-serif !important;
-        font-size: 14px !important;
+        font-size: 13.5px !important;
         font-weight: 600 !important;
         letter-spacing: 0.3px !important;
         border: none !important;
         border-radius: 8px !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: none !important;
-    }}
+    }
     
     /* Primary / Active toggle button */
-    {sel} button[kind="primary"] {{
-        background: {btn_bg} !important;
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] button[kind="primary"] {
+        background: __BTN_BG__ !important;
         color: #ffffff !important;
-        box-shadow: {btn_shadow} !important;
-    }}
+        box-shadow: __BTN_SHADOW__ !important;
+    }
     
     /* Secondary / Inactive toggle button */
-    {sel} button[kind="secondary"] {{
-        background: rgba(255, 255, 255, 0.03) !important;
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] button[kind="secondary"] {
+        background: transparent !important;
         color: #94a3b8 !important;
         border: 1px solid rgba(255,255,255,0.1) !important;
-    }}
+    }
     
-    {sel} button[kind="secondary"]:hover {{
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: #f1f5f9 !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
-    }}
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #e2e8f0 !important;
+    }
     
     /* Modern vector SVG icon for Sales (Dollar Symbol / Finance) */
-    {sel} div[data-testid="stColumn"]:first-child button::before {{
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:first-child button::before {
         content: "";
         display: inline-block;
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         background-color: currentColor;
         -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
         -webkit-mask-size: contain;
         mask-size: contain;
-    }}
+    }
     
     /* Modern vector SVG icon for Quantity (Package Box) */
-    {sel} div[data-testid="stColumn"]:nth-child(2) button::before {{
+    .bp-toggle-container-marker + div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:nth-child(2) button::before {
         content: "";
         display: inline-block;
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         background-color: currentColor;
         -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
         -webkit-mask-size: contain;
         mask-size: contain;
-    }}
+    }
     </style>
 <div class="bp-toggle-container-marker"></div>
-    """
+    """.replace("__BORDER__", container_border) \
+       .replace("__BTN_BG__", btn_bg) \
+       .replace("__BTN_SHADOW__", btn_shadow)
 
     st.markdown(toggle_css, unsafe_allow_html=True)
 
