@@ -1,0 +1,22 @@
+# تبويب 1: تحميل البيانات
+    with settings_tabs[0]:
+        st.header("📂 تحديث ملفات البيانات")
+        sales_file = st.file_uploader("رفع ملف المبيعات (Sales This Month.xlsx)", type=["xlsx"])
+        target_file = st.file_uploader("رفع ملف الأهداف (Target This Month.xlsx)", type=["xlsx"])
+        
+        if st.button("تحميل ومعالجة"):
+            if sales_file and target_file:
+                try:
+                    # تعديل مسارات الحفظ المؤقت لتفادي مشاكل الصلاحيات على سيرفر Hugging Face
+                    with open("temp_sales.xlsx", "wb") as f:
+                        f.write(sales_file.getbuffer()) # استخدام getbuffer() بدلاً من read() لضمان معالجة بايتات الملف الكبيرة بشكل آمن
+                    with open("temp_target.xlsx", "wb") as f:
+                        f.write(target_file.getbuffer())
+                    
+                    st.cache_resource.clear()
+                    st.success("تم رفع الملفات وتحديث البيانات بنجاح!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"حدث خطأ أثناء حفظ الملفات: {e}")
+            else:
+                st.error("يرجى رفع كلا الملفين")

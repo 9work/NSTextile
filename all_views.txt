@@ -1,0 +1,1985 @@
+Created At: 2026-05-26T12:07:23Z
+Completed At: 2026-05-26T12:07:23Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 1 to 800
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import streamlit as st
+2: import pandas as pd
+3: import plotly.express as px
+4: import plotly.graph_objects as go
+5: from datetime import datetime, timedelta
+6: from pathlib import Path
+7: from typing import Optional
+8: import os
+9: import json
+10: import streamlit.components.v1 as components
+11: from streamlit_theme import st_theme
+12: 
+13: APP_DIR = Path(__file__).resolve().parent
+14: LIGHT_LOGO = APP_DIR / "assets" / "ns_logo.png"
+15: DARK_LOGO = APP_DIR / "assets" / "ns_logo_dark.png"
+16: 
+17: 
+18: def _is_dark_theme() -> bool:
+19:     theme = st_theme(key="ns_dashboard_theme")
+20:     if theme and isinstance(theme, dict):
+21:         return str(theme.get("base", "")).lower() == "dark"
+22:     return False
+23: 
+24: 
+25: def _active_logo_path() -> Optional[Path]:
+26:     if LIGHT_LOGO.is_file() and DARK_LOGO.is_file():
+27:         return DARK_LOGO if _is_dark_theme() else LIGHT_LOGO
+28:     if LIGHT_LOGO.is_file():
+29:         return LIGHT_LOGO
+30:     if DARK_LOGO.is_file():
+31:         return DARK_LOGO
+32:     return None
+33: 
+34: 
+35: def render_dashboard_header(title: str, logo_width: int = 110):
+36:     logo_path = _active_logo_path()
+37: 
+38:     if logo_path:
+39:         col_logo, col_title = st.columns([0.4, 7], vertical_alignment="center", gap="small")
+40:         with col_logo:
+41:             st.image(str(logo_path), width=logo_width)
+42:         with col_title:
+43:             st.title(title)
+44:     else:
+45:         st.title(title)
+46: 
+47: 
+48: def section_header(icon_name, title):
+49:     """Render a styled section header with a material icon."""
+50:     st.markdown(f'''
+51:   
+<truncated 26065 bytes>
+  if not date_cols:
+762:             return None, None
+763:         dates = pd.to_datetime(df[date_cols[0]], errors="coerce").dropna()
+764:         if dates.empty:
+765:             return None, None
+766:         return dates.min().date(), dates.max().date()
+767:     except Exception:
+768:         return None, None
+769: 
+770: 
+771: def get_mtd_factor(mode, sales_df, month_length=0):
+772:     today = datetime.today()
+773:     def days_in_month(date):
+774:         next_month = (date.replace(day=28) + timedelta(days=4)).replace(day=1)
+775:         return (next_month - timedelta(days=1)).day
+776: 
+777:     if mode == "Last sales date":
+778:         if "Date" in sales_df.columns and not sales_df["Date"].dropna().empty:
+779:             last_date = sales_df["Date"].dropna().max()
+780:             if pd.isna(last_date):
+781:                 last_date = today
+782:             actual_days = days_in_month(last_date)
+783:             month_days = int(month_length) if month_length and month_length > 0 else actual_days
+784:             month_days = max(1, month_days)
+785:             return min(int(last_date.day), month_days) / month_days
+786:         return 1.0
+787:     month_days = int(month_length) if month_length and month_length > 0 else days_in_month(today)
+788:     month_days = max(1, month_days)
+789:     return min(today.day, month_days) / month_days
+790: 
+791: # واجهة تسجيل الدخول
+792: def login_page():
+793:     st.title("🔐 تسجيل الدخول")
+794:     with st.form("login_form", clear_on_submit=False):
+795:         email = st.text_input("البريد الإلكتروني")
+796:         password = st.text_input("كلمة المرور", type="password")
+797:         submitted = st.form_submit_button("دخول")
+798:     if submitted:
+799:         user = authenticate(email.strip(), password)
+800:         if user:
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:07:26Z
+Completed At: 2026-05-26T12:07:26Z
+File Path: `file:///C:/Users/7maah/Desktop/close%20app.py`
+Total Lines: 33
+Total Bytes: 1675
+Showing lines 1 to 33
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import psutil
+2: 
+3: def kill_background_processes():
+4:     # قائمة بكلمات دلالية للعمليات اللي مش عايزين نقفلها (النظام)
+5:     system_critical = [
+6:         'system', 'svchost.exe', 'explorer.exe', 'wininit.exe', 
+7:         'services.exe', 'lsass.exe', 'smss.exe', 'csrss.exe'
+8:     ]
+9:     
+10:     print("جاري فحص وتنبيه العمليات في الخلفية...")
+11:     
+12:     for proc in psutil.process_iter(['pid', 'name', 'username']):
+13:         try:
+14:             # التأكد إن العملية مش تابعة للنظام ومن ضمن قائمة المحظور لمسهم
+15:             proc_name = proc.info['name'].lower()
+16:             
+17:             if any(critical in proc_name for critical in system_critical):
+18:                 continue
+19:             
+20:             # قفل البرامج اللي تبع المستخدم الحالي وليها واجهة أو شغالة بكثافة
+21:             # يمكنك تحديد برامج معينة هنا، أو ترك الكود يقفل الكل (حسب الرغبة)
+22:             if proc.info['username'] is not None: 
+23:                 print(f"إغلاق العملية: {proc_name} (PID: {proc.info['pid']})")
+24:                 proc.terminate() # محاولة الإغلاق بلطف
+25:                 
+26:         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+27:             # تخطي العمليات اللي مش مسموح لينا نوصل لها أو اللي اتقفلت بالفعل
+28:             continue
+29: 
+30:     print("--- تم تنظيف الخلفية بنجاح ---")
+31: 
+32: if __name__ == "__main__":
+33:     kill_background_processes()
+The above content shows the entire, complete file contents of the requested file.
+
+---
+Created At: 2026-05-26T12:09:05Z
+Completed At: 2026-05-26T12:09:05Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2200 to 2350
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2200:             "B2C %": (sales_b2c / target_b2c * 100) if target_b2c else None,
+2201:             "Total Target": target_total, "Total Sales": sales_total,
+2202:             "Sales %": (sales_total / target_total * 100) if target_total else None,
+2203:         })
+2204:         branch_perf_qty.append({
+2205:             "Branch": branch,
+2206:             "B2B Qty Target": qt_b2b, "Qty B2B": qty_b2b,
+2207:             "B2B %": (qty_b2b / qt_b2b * 100) if qt_b2b else None,
+2208:             "B2C Qty Target": qt_b2c, "Qty B2C": qty_b2c,
+2209:             "B2C %": (qty_b2c / qt_b2c * 100) if qt_b2c else None,
+2210:             "Total Qty Target": qt_total, "Total Qty": qty_total,
+2211:             "Qty %": (qty_total / qt_total * 100) if qt_total else None,
+2212:         })
+2213: 
+2214:     # --- Sort branches by brand priority ---
+2215:     brand_priority = {
+2216:         "EXP": 0, "NS": 1, "ED": 2, "DOMYAT": 3, "DOMYAT/EXP": 3, 
+2217:         "SHOP IN SHOP": 4, "OTHER CHANNEL": 5, "AND OTHER": 6, "OTHER": 7
+2218:     }
+2219:     def _get_branch_brand(branch_name):
+2220:         """Get the brand for a branch from branch_target or sales data."""
+2221:         if "Brand" in branch_target.columns:
+2222:             row = branch_target[branch_target["Branch"] == branch_name]
+2223:             if not row.empty and pd.notna(row["Brand"].values[0]):
+2224:                 return str(row["Brand"].values[0]).strip()
+2225:         # Fallback: check sales data
+2226:         br_data = filtered_sales[filtered_sales[branch_column] == branch_name]
+2227:         if not br_data.empty and brand_column in br_data.
+<truncated 5238 bytes>
+163,74,0.15);color:#86efac;border:1px solid rgba(22,163,74,0.25)}
+2316: .bp-table tfoot td{position:sticky;bottom:0;z-index:4;background:#1e293b !important;border-top:2px solid rgba(var(--bp-primary-rgb),0.3) !important;height:40px;line-height:40px}
+2317: .bp-table tfoot td:first-child{border-bottom-left-radius:14px}
+2318: .bp-table tfoot td:last-child{border-bottom-right-radius:14px}
+2319: .bp-table tfoot .bp-cell-branch{font-weight:800;color:var(--bp-accent);font-size:12.5px}
+2320: .bp-table tfoot .bp-cell-num{font-weight:700;color:#e2e8f0}
+2321: </style>
+2322: <script>
+2323: function bpSort(tid,ci){
+2324:   var t=document.getElementById(tid);if(!t)return;
+2325:   var tb=t.querySelector('tbody');
+2326:   var rs=Array.from(tb.querySelectorAll('tr'));
+2327:   var ths=t.querySelectorAll('.bp-header-row th');
+2328:   var th=ths[ci];
+2329:   ths.forEach(function(h){h.classList.remove('asc','desc')});
+2330:   var d=th.dataset.sort==='asc'?'desc':'asc';
+2331:   th.dataset.sort=d;th.classList.add(d);
+2332:   rs.sort(function(a,b){
+2333:     var va=parseFloat(a.cells[ci].getAttribute('data-v'))||0;
+2334:     var vb=parseFloat(b.cells[ci].getAttribute('data-v'))||0;
+2335:     return d==='asc'?va-vb:vb-va;
+2336:   });
+2337:   while(tb.firstChild)tb.removeChild(tb.firstChild);
+2338:   rs.forEach(function(r){tb.appendChild(r)});
+2339: }
+2340: </script>"""
+2341: 
+2342:     def _build_perf_table(table_id, rows, groups, nice_labels, pct_cols, is_total_fn, max_visible=10, is_quantity_mode=False):
+2343:         """Build premium sortable HTML table as self-contained HTML for components.html."""
+2344:         theme_vars = """:root {
+2345:   --bp-primary: #14b8a6;
+2346:   --bp-primary-rgb: 20, 184, 166;
+2347:   --bp-accent: #2dd4bf;
+2348: }""" if is_quantity_mode else """:root {
+2349:   --bp-primary: #6366f1;
+2350:   --bp-primary-rgb: 99, 102, 241;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:09:07Z
+Completed At: 2026-05-26T12:09:07Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2351 to 2550
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2351:   --bp-accent: #818cf8;
+2352: }"""
+2353:         flat_cols = []
+2354:         for gn, gc in groups:
+2355:             flat_cols.extend(gc)
+2356:         branch_like = [c for c in flat_cols if c in ["Branch","Sales Rep"]]
+2357: 
+2358:         # Identify data rows vs total row
+2359:         data_rows = [r for r in rows if not is_total_fn(r)]
+2360:         total_rows = [r for r in rows if is_total_fn(r)]
+2361:         has_total = len(total_rows) > 0
+2362: 
+2363:         # Heights
+2364:         row_h = 38
+2365:         header_h = 75
+2366:         total_row_h = 40 if has_total else 0
+2367: 
+2368:         num_data = len(data_rows)
+2369:         visible_data = min(num_data, max_visible)
+2370: 
+2371:         # Capped height for scrolling container
+2372:         scroll_h = (visible_data * row_h) + header_h + total_row_h
+2373:         
+2374:         # Give iframe a generous height so it never shows its own scrollbar
+2375:         total_height = scroll_h + 30
+2376: 
+2377:         tbl = f'<div class="bp-scroll" style="height:{scroll_h}px; max-height:{scroll_h}px; overflow-y:auto;">'
+2378:         tbl += f'<table class="bp-table" id="{table_id}">'
+2379:         tbl += '<thead><tr class="bp-group-row">'
+2380:         for gn, gc in groups:
+2381:             cls = "bp-group-empty" if gn == "" else "bp-group-label"
+2382:             tbl += f'<th colspan="{len(gc)}" class="{cls}">{gn}</th>'
+2383:         tbl += '</tr><tr class="bp-header-row">'
+2384:         col_idx = 0
+2385:         for gn, gc in groups:
+2386:             for c in gc:
+2387:                 sortable = c not in branch_like
+2388:             
+<truncated 8716 bytes>
+umn
+2525:     if brand_filter and brand_filter != "الكل":
+2526:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col] == brand_filter]
+2527:     elif channel_category == "Branch":
+2528:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col].isin(["EXP", "NS", "ED", "Domyat"])]
+2529:     elif channel_category == "Other Channel":
+2530:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col].isin(["Shop IN Shop", "Other Channel"])]
+2531: 
+2532:     # Build complete list of (Sales Rep, Branch) combinations from targets only
+2533:     all_pairs = []
+2534:     target_pairs = set()
+2535:     if isinstance(rep_target, pd.DataFrame) and "Sales Rep" in rep_target.columns and "Branch" in rep_target.columns:
+2536:         # Filter rep_target by selected branches and brand
+2537:         filtered_rep_target = rep_target[rep_target["Branch"].isin(selected_rep_branches)].copy()
+2538:         if brand_filter and brand_filter != "الكل" and "Brand" in filtered_rep_target.columns:
+2539:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"] == brand_filter]
+2540:         elif channel_category == "Branch" and "Brand" in filtered_rep_target.columns:
+2541:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"].isin(["EXP", "NS", "ED", "Domyat"])]
+2542:         elif channel_category == "Other Channel" and "Brand" in filtered_rep_target.columns:
+2543:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"].isin(["Shop IN Shop", "Other Channel"])]
+2544:         
+2545:         for _, row in filtered_rep_target.iterrows():
+2546:             r = row["Sales Rep"]
+2547:             b = row["Branch"]
+2548:             if pd.notna(r) and pd.notna(b):
+2549:                 target_pairs.add((str(r).strip(), str(b).strip()))
+2550: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:09:37Z
+Completed At: 2026-05-26T12:09:37Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2100 to 2200
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2100:         background: rgba(255, 255, 255, 0.05) !important;
+2101:         color: #e2e8f0 !important;
+2102:     }
+2103:     
+2104:     /* Modern vector SVG icon for Sales (Dollar Symbol / Finance) */
+2105:     .bp-toggle-container div[data-testid="stColumn"]:first-child button::before {
+2106:         content: "";
+2107:         display: inline-block;
+2108:         width: 14px;
+2109:         height: 14px;
+2110:         background-color: currentColor;
+2111:         -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
+2112:         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
+2113:         -webkit-mask-size: contain;
+2114:         mask-size: contain;
+2115:     }
+2116:     
+2117:     /* Modern vector SVG icon for Quantity (Package Box) */
+2118:     .bp-toggle-container div[data-testid="stColumn"]:nth-child(2) button::before {
+2119:         content: "";
+2120:         display: inline-block;
+2121:         width: 14px;
+2122:         height: 14px;
+2123:         background-color: currentColor;
+2124:         -webkit
+<truncated 3446 bytes>
+get_row[col_s_b2c].values[0]) * factor if col_s_b2c else 0
+2176:         target_total = float(target_row[col_s_total].values[0]) * factor if col_s_total else 0
+2177: 
+2178:         qt_b2b = float(target_row[col_q_b2b].values[0]) * factor if col_q_b2b else 0
+2179:         qt_b2c = float(target_row[col_q_b2c].values[0]) * factor if col_q_b2c else 0
+2180:         qt_total = float(target_row[col_q_total].values[0]) * factor if col_q_total else 0
+2181: 
+2182:         if target_total == 0 and target_b2b == 0 and target_b2c == 0 and qt_total == 0 and qt_b2b == 0 and qt_b2c == 0:
+2183:             continue
+2184: 
+2185:         branch_data = filtered_sales[(filtered_sales[branch_column] == branch) & (filtered_sales["Sales Type"].isin(["Sales","Return"]))]
+2186:         sales_b2b = branch_data[branch_data["Customer Type"] == "B2B"]["Total After Disc"].sum()
+2187:         sales_b2c = branch_data[branch_data["Customer Type"] == "B2C"]["Total After Disc"].sum()
+2188:         sales_total = sales_b2b + sales_b2c
+2189: 
+2190:         branch_qty_data = filtered_sales[(filtered_sales[branch_column] == branch) & (filtered_sales["Sales Type"] == "Sales")]
+2191:         qty_b2b = branch_qty_data[branch_qty_data["Customer Type"] == "B2B"]["Qty"].sum() if "Qty" in filtered_sales.columns else 0
+2192:         qty_b2c = branch_qty_data[branch_qty_data["Customer Type"] == "B2C"]["Qty"].sum() if "Qty" in filtered_sales.columns else 0
+2193:         qty_total = qty_b2b + qty_b2c
+2194: 
+2195:         branch_perf.append({
+2196:             "Branch": branch,
+2197:             "B2B MTD Target": target_b2b, "Sales B2B": sales_b2b,
+2198:             "B2B %": (sales_b2b / target_b2b * 100) if target_b2b else None,
+2199:             "B2C MTD Target": target_b2c, "Sales B2C": sales_b2c,
+2200:             "B2C %": (sales_b2c / target_b2c * 100) if target_b2c else None,
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:09:39Z
+Completed At: 2026-05-26T12:09:39Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2050 to 2100
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2050:     /* Container style for the toggle group */
+2051:     .bp-toggle-container > div[data-testid="stHorizontalBlock"] {
+2052:         background: #0f172a !important;
+2053:         border: __BORDER__ !important;
+2054:         padding: 4px !important;
+2055:         border-radius: 12px !important;
+2056:         display: inline-flex !important;
+2057:         gap: 4px !important;
+2058:         width: auto !important;
+2059:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2060:     }
+2061:     
+2062:     /* Ensure columns do not stretch and stay inline */
+2063:     .bp-toggle-container div[data-testid="stColumn"] {
+2064:         width: auto !important;
+2065:         flex: none !important;
+2066:     }
+2067:     
+2068:     /* Standardize button dimensions and typography */
+2069:     .bp-toggle-container button {
+2070:         display: inline-flex !important;
+2071:         align-items: center !important;
+2072:         justify-content: center !important;
+2073:         gap: 8px !important;
+2074:         height: 38px !important;
+2075:         padding: 0 20px !important;
+2076:         font-family: 'Outfit', 'Cairo', sans-serif !important;
+2077:         font-size: 13.5px !important;
+2078:         font-weight: 600 !important;
+2079:         letter-spacing: 0.3px !important;
+2080:         border: none !important;
+2081:         border-radius: 8px !important;
+2082:         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+2083:         box-shadow: none !important;
+2084:     }
+2085:     
+2086:     /* Primary / Active toggle button */
+2087:     .bp-toggle-container button[kind="primary"] {
+2088:         background: __BTN_BG__ !important;
+2089:         color: #ffffff !important;
+2090:         box-shadow: __BTN_SHADOW__ !important;
+2091:     }
+2092:     
+2093:     /* Secondary / Inactive toggle button */
+2094:     .bp-toggle-container button[kind="secondary"] {
+2095:         background: transparent !important;
+2096:         color: #64748b !important;
+2097:     }
+2098:     
+2099:     .bp-toggle-container button[kind="secondary"]:hover {
+2100:         background: rgba(255, 255, 255, 0.05) !important;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:09:40Z
+Completed At: 2026-05-26T12:09:40Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2000 to 2050
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2000:         """.replace('__TOP_LABELS__', json.dumps(top5_labels)) \
+2001:            .replace('__TOP_VALUES__', json.dumps(top5_values)) \
+2002:            .replace('__BOT_LABELS__', json.dumps(bottom5_labels)) \
+2003:            .replace('__BOT_VALUES__', json.dumps(bottom5_values)) \
+2004:            .replace('__GLOBAL_MAX__', str(global_max))
+2005:         components.html(branch_rank_html, height=400)
+2006:         st.markdown('</div>', unsafe_allow_html=True)
+2007: 
+2008: 
+2009:     def pct_cell_style(val):
+2010:         import math
+2011:         try:
+2012:             v = float(val)
+2013:             if math.isnan(v):
+2014:                 return ""
+2015:         except Exception:
+2016:             return ""
+2017:         if v < 70:
+2018:             return "color:white; background-color:#d9534f"
+2019:         elif v < 90:
+2020:             return "color:black; background-color:#f0ad4e"
+2021:         else:
+2022:             return "color:black; background-color:#5cb85c"
+2023: 
+2024:     def fmt_pct(val):
+2025:         import math
+2026:         try:
+2027:             v = float(val)
+2028:             if math.isnan(v):
+2029:                 return ""
+2030:         except Exception:
+2031:             return ""
+2032:         return f"{v:.1f}%"
+2033: 
+2034:     section_header("account_tree", "Branch Performance")
+2035: 
+2036:     if "bp_view_mode" not in st.session_state:
+2037:         st.session_state.bp_view_mode = "sales"
+2038: 
+2039:     # Define active toggle button styles dynamically based on the active mode
+2040:     if st.session_state.bp_view_mode == "sales":
+2041:         btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
+2042:         btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+2043:         container_border = "1px solid rgba(99, 102, 241, 0.2)"
+2044:     else:
+2045:         btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2046:         btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2047:         container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2048: 
+2049:     toggle_css = """<style>
+2050:     /* Container style for the toggle group */
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:09:50Z
+Completed At: 2026-05-26T12:09:50Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2045 to 2140
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2045:         btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2046:         btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2047:         container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2048: 
+2049:     toggle_css = """<style>
+2050:     /* Container style for the toggle group */
+2051:     .bp-toggle-container > div[data-testid="stHorizontalBlock"] {
+2052:         background: #0f172a !important;
+2053:         border: __BORDER__ !important;
+2054:         padding: 4px !important;
+2055:         border-radius: 12px !important;
+2056:         display: inline-flex !important;
+2057:         gap: 4px !important;
+2058:         width: auto !important;
+2059:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2060:     }
+2061:     
+2062:     /* Ensure columns do not stretch and stay inline */
+2063:     .bp-toggle-container div[data-testid="stColumn"] {
+2064:         width: auto !important;
+2065:         flex: none !important;
+2066:     }
+2067:     
+2068:     /* Standardize button dimensions and typography */
+2069:     .bp-toggle-container button {
+2070:         display: inline-flex !important;
+2071:         align-items: center !important;
+2072:         justify-content: center !important;
+2073:         gap: 8px !important;
+2074:         height: 38px !important;
+2075:         padding: 0 20px !important;
+2076:         font-family: 'Outfit', 'Cairo', sans-serif !important;
+2077:         font-size: 13.5px !important;
+2078:         font-weight: 600 !important;
+2079:         letter-spacing: 0.3px !important;
+2080:         border: none !important;
+2081:         border-radius: 8px !important;
+<truncated 2110 bytes>
+hild(2) button::before {
+2119:         content: "";
+2120:         display: inline-block;
+2121:         width: 14px;
+2122:         height: 14px;
+2123:         background-color: currentColor;
+2124:         -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2125:         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2126:         -webkit-mask-size: contain;
+2127:         mask-size: contain;
+2128:     }
+2129:     </style>
+2130:     <div class="bp-toggle-container">
+2131:     """.replace("__BORDER__", container_border) \
+2132:        .replace("__BTN_BG__", btn_bg) \
+2133:        .replace("__BTN_SHADOW__", btn_shadow)
+2134: 
+2135:     st.markdown(toggle_css, unsafe_allow_html=True)
+2136: 
+2137:     bp_tog_col1, bp_tog_col2, _ = st.columns([0.8, 0.9, 8])
+2138:     with bp_tog_col1:
+2139:         if st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2140:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:13:15Z
+Completed At: 2026-05-26T12:13:15Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2707
+Total Bytes: 119098
+Showing lines 300 to 350
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+300: /* 🔥 إصلاح تمييز الخيار النشط (الزر المحدد حالياً) في الراديو */
+301: [data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"],
+302: [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked),
+303: [data-testid="stSidebar"] div[role="radiogroup"] label:has(input[aria-checked="true"]),
+304: [data-testid="stSidebar"] div[role="radiogroup"] label[data-checked="true"],
+305: [data-testid="stSidebar"] div[role="radiogroup"] label[aria-checked="true"] {
+306:     background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+307:     border-color: #4f46e5 !important;
+308:     color: white !important;
+309:     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+310: }
+311: 
+312: /* ضمان لون النص أبيض داخل الخيار النشط */
+313: [data-testid="stSidebar"] div[role="radiogroup"] [data-checked="true"] p,
+314: [data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p,
+315: [data-testid="stSidebar"] div[role="radiogroup"] label:has(input[aria-checked="true"]) p,
+316: [data-testid="stSidebar"] div[role="radiogroup"] label[data-checked="true"] p {
+317:     color: white !important;
+318: }
+319: 
+320: /* تخصيص زر تسجيل الخروج / الأزرار في الشريط الجانبي */
+321: [data-testid="stSidebar"]  .stButton button {
+322:     background-color: rgba(239, 68, 68, 0.1) !important;
+323:     color: #f87171 !important;
+324:     border: 1px solid rgba(239, 68, 68, 0.2) !important;
+325:     border-radius: 10px !important;
+326:     font-weight: 600 !important;
+327:     transition: all 0.2s ease !important;
+328:     width: 100% !important;
+329:     padding: 8px 16px !important;
+330: }
+331: 
+332: [data-testid="stSidebar"] .stButton button:hover {
+333:     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+334:     border-color: #ef4444 !important;
+335:     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+336:     color: white !important;
+337: }
+338: 
+339:     /* ---------------------------------------------
+340:        تنسيقات الجداول والعناصر في القسم الرئيسي
+341:     --------------------------------------------- */
+342:     .stDataFrame, .stDataFrame table {
+343:         font-size: 12px !important;
+344:         border-radius: 12px !important;
+345:         overflow: hidden !important;
+346:     }
+347: 
+348:     /* تخصيص شريط التمرير (Scrollbars) لمظهر متناسق */
+349:     ::-webkit-scrollbar {
+350:         width: 8px;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:13:17Z
+Completed At: 2026-05-26T12:13:17Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2707
+Total Bytes: 119098
+Showing lines 75 to 200
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+75: st.set_page_config(page_title="NSTextile Dashboard", layout="wide", initial_sidebar_state="expanded")
+76: 
+77: # إعدادات وتنسيق الصفحة الاحترافي
+78: st.markdown("""
+79: <style>
+80:     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Cairo:wght@300;400;600;700;800&display=swap');
+81:     @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+82: 
+83:     /* الخطوط العامة وتجانس الألوان */
+84:     html, body, [class*="css"], .stMarkdown, .stText, p, span, h1, h2, h3, h4, h5, h6, label {
+85:         font-family: 'Outfit', 'Cairo', sans-serif !important;
+86:     }
+87: 
+88:     /* Material Symbols Rounded base icon styling */
+89:     .material-symbols-rounded {
+90:         font-family: 'Material Symbols Rounded' !important;
+91:         font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+92:         vertical-align: middle;
+93:         display: inline-block;
+94:         line-height: 1;
+95:     }
+96:     
+97:     body {
+98:         background-color: #f8fafc !important;
+99:         color: #1e293b !important;
+100:     }
+101: 
+102:     /* حاوية الصفحة وتقليل الهوامش الزائدة */
+103:     .block-container {
+104:         padding-top: 1.5rem !important;
+105:         padding-bottom: 1.5rem !important;
+106:         padding-left: 2rem !important;
+107:         padding-right: 2rem !important;
+108:         max-width: 95% !important;
+109:     }
+110: 
+111: /* -------------------------------------
+<truncated 1973 bytes>
+ /* إخفاء كل العناصر الداخلية بلا استثناء */
+156: [data-testid="stSidebar"] button[kind="header"] > *,
+157: [data-testid="collapsedControl"] button > *,
+158: [data-testid="stSidebarCollapseButton"] > *,
+159: [data-testid="baseButton-header"] > * {
+160:     display: none !important;
+161:     visibility: hidden !important;
+162:     font-size: 0 !important;
+163:     position: absolute !important;
+164:     width: 0 !important;
+165:     height: 0 !important;
+166:     overflow: hidden !important;
+167: }
+168: 
+169: /* أيقونة مخصصة لزر إغلاق القائمة (داخل الشريط الجانبي) — سهم يسار */
+170: [data-testid="stSidebar"] button[kind="header"]::after,
+171: [data-testid="stSidebarCollapseButton"]::after {
+172:     content: "✕" !important;
+173:     display: flex !important;
+174:     align-items: center !important;
+175:     justify-content: center !important;
+176:     font-size: 16px !important;
+177:     color: #a78bfa !important;
+178:     text-indent: 0 !important;
+179:     position: absolute !important;
+180:     inset: 0 !important;
+181:     visibility: visible !important;
+182:     font-weight: 700 !important;
+183: }
+184: 
+185: /* أيقونة مخصصة لزر فتح القائمة (خارج الشريط الجانبي) — قائمة ☰ */
+186: [data-testid="collapsedControl"] button::after,
+187: [data-testid="baseButton-header"]::after {
+188:     content: "☰" !important;
+189:     display: flex !important;
+190:     align-items: center !important;
+191:     justify-content: center !important;
+192:     font-size: 18px !important;
+193:     color: #a78bfa !important;
+194:     text-indent: 0 !important;
+195:     position: absolute !important;
+196:     inset: 0 !important;
+197:     visibility: visible !important;
+198:     font-weight: 400 !important;
+199: }
+200: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:13:27Z
+Completed At: 2026-05-26T12:13:27Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2707
+Total Bytes: 119098
+Showing lines 2080 to 2105
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2080:         font-weight: 600 !important;
+2081:         letter-spacing: 0.3px !important;
+2082:         border: none !important;
+2083:         border-radius: 8px !important;
+2084:         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+2085:         box-shadow: none !important;
+2086:     }
+2087:     
+2088:     /* Primary / Active toggle button */
+2089:     .bp-toggle-container button[kind="primary"] {
+2090:         background: __BTN_BG__ !important;
+2091:         color: #ffffff !important;
+2092:         box-shadow: __BTN_SHADOW__ !important;
+2093:     }
+2094:     
+2095:     /* Secondary / Inactive toggle button */
+2096:     .bp-toggle-container button[kind="secondary"] {
+2097:         background: transparent !important;
+2098:         color: #64748b !important;
+2099:     }
+2100:     
+2101:     .bp-toggle-container button[kind="secondary"]:hover {
+2102:         background: rgba(255, 255, 255, 0.05) !important;
+2103:         color: #e2e8f0 !important;
+2104:     }
+2105:     
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+The USER performed the following action:
+Show the contents of file c:\Users\7maah\Desktop\app.py from lines 1624 to 1671
+File Path: `file:///c:/Users/7maah/Desktop/app.py`
+Total Lines: 2320
+Total Bytes: 99076
+Showing lines 1624 to 1671
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1624:             responsive: true
+1625:         });
+1626: 
+1627:         // Premium line-drawing animation (bars are stationary)
+1628:         async function runAnimation() {
+1629:             // Line draws progressively with growing markers
+1630:             const lineStagger = Math.max(30, Math.min(60, 600 / N));
+1631:             for (let i = 0; i < N; i++) {
+1632:                 await Plotly.animate('daily-chart', {
+1633:                     data: [{}, {
+1634:                         x: labels.slice(0, i + 1),
+1635:                         y: achievementValues.slice(0, i + 1),
+1636:                         marker: { size: 8, color: '#d97706', line: { color: 'white', width: 1.5 } }
+1637:                     }]
+1638:                 }, {
+1639:                     transition: { duration: lineStagger, easing: 'cubic-in-out' },
+1640:                     frame: { duration: lineStagger, redraw: true }
+1641:                 });
+1642:             }
+1643: 
+1644:             // Phase 3: Enhanced hover after animation
+1645:             const chart = document.getElementById('daily-chart');
+1646:             chart.on('plotly_hover', function(data) {
+1647:                 const idx = data.points[0].pointIndex;
+1648:                 const colors = salesValues.map((_, j) => j === idx ? '#818cf8' : '#6366f1');
+1649:                 Plotly.restyle('daily-chart', { 'marker.color': [colors] }, [0]);
+1650:             });
+1651:             chart.on('plotly_unhover', function() {
+1652:                 const colors = salesValues.map(() => '#6366f1');
+1653:                 Plotly.restyle('daily-chart', { 'marker.color': [colors] }, [0]);
+1654:             });
+1655:         }
+1656: 
+1657:         // Entrance: container slide up, then chart animates
+1658:         setTimeout(() => {
+1659:             document.getElementById('chart-wrapper').classList.add('revealed');
+1660:         }, 100);
+1661:         setTimeout(runAnimation, 700);
+1662:     </script>
+1663: </body>
+1664: </html>
+1665:     """.replace('__LABELS__', json.dumps(labels_list)) \
+1666:        .replace('__SALES__', json.dumps(sales_list)) \
+1667:        .replace('__ACH__', json.dumps(ach_list)) \
+1668:        .replace('__Y2MAX__', str(y2_max))
+1669: 
+1670:     components.html(animated_chart_html, height=540)
+1671: 
+
+
+---
+Created At: 2026-05-26T12:16:14Z
+Completed At: 2026-05-26T12:16:15Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2712
+Total Bytes: 119438
+Showing lines 2030 to 2160
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2030:         except Exception:
+2031:             return ""
+2032:         return f"{v:.1f}%"
+2033: 
+2034:     section_header("account_tree", "Branch Performance")
+2035: 
+2036:     if "bp_view_mode" not in st.session_state:
+2037:         st.session_state.bp_view_mode = "sales"
+2038: 
+2039:     # Define active toggle button styles dynamically based on the active mode
+2040:     if st.session_state.bp_view_mode == "sales":
+2041:         btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
+2042:         btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+2043:         container_border = "1px solid rgba(99, 102, 241, 0.2)"
+2044:     else:
+2045:         btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2046:         btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2047:         container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2048: 
+2049:     import textwrap
+2050:     toggle_css = textwrap.dedent("""
+2051:     <style>
+2052:     /* Container style for the toggle group */
+2053:     .bp-toggle-container > div[data-testid="stHorizontalBlock"] {
+2054:         background: #0f172a !important;
+2055:         border: __BORDER__ !important;
+2056:         padding: 4px !important;
+2057:         border-radius: 12px !important;
+2058:         display: inline-flex !important;
+2059:         gap: 4px !important;
+2060:         width: auto !important;
+2061:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2062:     }
+2063:     
+2064:     /* Ensure columns do not stretch and stay inline */
+2065:     .bp-toggle-container div[data-testid="stColumn"] {
+2066:         width: auto !important;
+2067:         f
+<truncated 3755 bytes>
+1 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2132:         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2133:         -webkit-mask-size: contain;
+2134:         mask-size: contain;
+2135:     }
+2136:     </style>
+2137:     <div class="bp-toggle-container">
+2138:     """).strip().replace("__BORDER__", container_border) \
+2139:        .replace("__BTN_BG__", btn_bg) \
+2140:        .replace("__BTN_SHADOW__", btn_shadow)
+2141: 
+2142:     st.markdown(toggle_css, unsafe_allow_html=True)
+2143: 
+2144:     bp_tog_col1, bp_tog_col2, _ = st.columns([0.8, 0.9, 8])
+2145:     with bp_tog_col1:
+2146:         if st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2147:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+2148:             st.session_state.bp_view_mode = "sales"
+2149:             st.rerun()
+2150:     with bp_tog_col2:
+2151:         if st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2152:                      type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary"):
+2153:             st.session_state.bp_view_mode = "quantity"
+2154:             st.rerun()
+2155: 
+2156:     st.markdown("</div>", unsafe_allow_html=True)
+2157: 
+2158:     branch_perf = []
+2159:     branch_perf_qty = []
+2160:     def find_target_column(df, candidates):
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:16:45Z
+Completed At: 2026-05-26T12:16:45Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2711
+Total Bytes: 119593
+Showing lines 2040 to 2180
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2040:     if st.session_state.bp_view_mode == "sales":
+2041:         btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
+2042:         btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+2043:         container_border = "1px solid rgba(99, 102, 241, 0.2)"
+2044:     else:
+2045:         btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2046:         btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2047:         container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2048: 
+2049:     import textwrap
+2050:     toggle_css = textwrap.dedent("""
+2051:     <style>
+2052:     /* Container style for the toggle group - target the sibling stHorizontalBlock */
+2053:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] {
+2054:         background: #0f172a !important;
+2055:         border: __BORDER__ !important;
+2056:         padding: 4px !important;
+2057:         border-radius: 12px !important;
+2058:         display: inline-flex !important;
+2059:         gap: 4px !important;
+2060:         width: auto !important;
+2061:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2062:     }
+2063:     
+2064:     /* Ensure columns do not stretch and stay inline */
+2065:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+2066:         width: auto !important;
+2067:         flex: none !important;
+2068:     }
+2069:     
+2070:     /* Standardize button dimensions and typography */
+2071:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] button {
+2072:         display: inline-flex !important;
+2073:         align-it
+<truncated 4721 bytes>
+46:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+2147:             st.session_state.bp_view_mode = "sales"
+2148:             st.rerun()
+2149:     with bp_tog_col2:
+2150:         if st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2151:                      type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary"):
+2152:             st.session_state.bp_view_mode = "quantity"
+2153:             st.rerun()
+2154: 
+2155:     st.markdown("</div>", unsafe_allow_html=True)
+2156: 
+2157:     branch_perf = []
+2158:     branch_perf_qty = []
+2159:     def find_target_column(df, candidates):
+2160:         for c in candidates:
+2161:             if c in df.columns:
+2162:                 return c
+2163:         return None
+2164: 
+2165:     # Sales target columns
+2166:     col_s_b2b = find_target_column(branch_target, ["Sales Target | B2B", "Sales Target B2B", "B2B MTD Target"])
+2167:     col_s_b2c = find_target_column(branch_target, ["Sales Target | B2C", "Sales Target B2C", "B2C MTD Target"])
+2168:     col_s_total = find_target_column(branch_target, ["Sales Target | TOTAL", "Sales Target TOTAL", "Total Target"])
+2169: 
+2170:     # Quantity target columns
+2171:     col_q_b2b = find_target_column(branch_target, ["Quantity Target | B2B", "Quantity Target B2B"])
+2172:     col_q_b2c = find_target_column(branch_target, ["Quantity Target | B2C", "Quantity Target B2C"])
+2173:     col_q_total = find_target_column(branch_target, ["Quantity Target | TOTAL", "Quantity Target TOTAL"])
+2174: 
+2175:     for branch in selected_branches:
+2176:         target_row = branch_target[branch_target["Branch"] == branch]
+2177:         if target_row.empty:
+2178:             continue
+2179: 
+2180:         target_b2b = float(target_row[col_s_b2b].values[0]) * factor if col_s_b2b else 0
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:16:47Z
+Completed At: 2026-05-26T12:16:47Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2711
+Total Bytes: 119593
+Showing lines 2049 to 2157
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2049:     import textwrap
+2050:     toggle_css = textwrap.dedent("""
+2051:     <style>
+2052:     /* Container style for the toggle group - target the sibling stHorizontalBlock */
+2053:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] {
+2054:         background: #0f172a !important;
+2055:         border: __BORDER__ !important;
+2056:         padding: 4px !important;
+2057:         border-radius: 12px !important;
+2058:         display: inline-flex !important;
+2059:         gap: 4px !important;
+2060:         width: auto !important;
+2061:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2062:     }
+2063:     
+2064:     /* Ensure columns do not stretch and stay inline */
+2065:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+2066:         width: auto !important;
+2067:         flex: none !important;
+2068:     }
+2069:     
+2070:     /* Standardize button dimensions and typography */
+2071:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] button {
+2072:         display: inline-flex !important;
+2073:         align-items: center !important;
+2074:         justify-content: center !important;
+2075:         gap: 8px !important;
+2076:         height: 38px !important;
+2077:         padding: 0 20px !important;
+2078:         font-family: 'Outfit', 'Cairo', sans-serif !important;
+2079:         font-size: 13.5px !important;
+2080:         font-weight: 600 !important;
+2081:         letter-spacing: 0.3px !important;
+2082:         border: none !important;
+2083:         border-radius: 8px !important;
+
+<truncated 2977 bytes>
+ 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2131:         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2132:         -webkit-mask-size: contain;
+2133:         mask-size: contain;
+2134:     }
+2135:     </style>
+2136:     <div class="bp-toggle-container">
+2137:     """).strip().replace("__BORDER__", container_border) \
+2138:        .replace("__BTN_BG__", btn_bg) \
+2139:        .replace("__BTN_SHADOW__", btn_shadow)
+2140: 
+2141:     st.markdown(toggle_css, unsafe_allow_html=True)
+2142: 
+2143:     bp_tog_col1, bp_tog_col2, _ = st.columns([0.8, 0.9, 8])
+2144:     with bp_tog_col1:
+2145:         if st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2146:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+2147:             st.session_state.bp_view_mode = "sales"
+2148:             st.rerun()
+2149:     with bp_tog_col2:
+2150:         if st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2151:                      type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary"):
+2152:             st.session_state.bp_view_mode = "quantity"
+2153:             st.rerun()
+2154: 
+2155:     st.markdown("</div>", unsafe_allow_html=True)
+2156: 
+2157:     branch_perf = []
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:16:55Z
+Completed At: 2026-05-26T12:16:56Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2707
+Total Bytes: 119643
+Showing lines 2040 to 2165
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2040:     if st.session_state.bp_view_mode == "sales":
+2041:         btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
+2042:         btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+2043:         container_border = "1px solid rgba(99, 102, 241, 0.2)"
+2044:     else:
+2045:         btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2046:         btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2047:         container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2048: 
+2049:     import textwrap
+2050:     toggle_css = textwrap.dedent("""
+2051:     <style>
+2052:     /* Container style for the toggle group - target the sibling stHorizontalBlock */
+2053:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] {
+2054:         background: #0f172a !important;
+2055:         border: __BORDER__ !important;
+2056:         padding: 4px !important;
+2057:         border-radius: 12px !important;
+2058:         display: inline-flex !important;
+2059:         gap: 4px !important;
+2060:         width: auto !important;
+2061:         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2062:     }
+2063:     
+2064:     /* Ensure columns do not stretch and stay inline */
+2065:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+2066:         width: auto !important;
+2067:         flex: none !important;
+2068:     }
+2069:     
+2070:     /* Standardize button dimensions and typography */
+2071:     div:has(> .bp-toggle-marker) + div div[data-testid="stHorizontalBlock"] button {
+2072:         display: inline-flex !important;
+2073:         align-it
+<truncated 4097 bytes>
+ points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2130:         -webkit-mask-size: contain;
+2131:         mask-size: contain;
+2132:     }
+2133:     </style>
+2134:     <span class="bp-toggle-marker"></span>
+2135:     """).strip().replace("__BORDER__", container_border) \
+2136:        .replace("__BTN_BG__", btn_bg) \
+2137:        .replace("__BTN_SHADOW__", btn_shadow)
+2138: 
+2139:     st.markdown(toggle_css, unsafe_allow_html=True)
+2140: 
+2141:     bp_tog_col1, bp_tog_col2, _ = st.columns([0.8, 0.9, 8])
+2142:     with bp_tog_col1:
+2143:         if st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2144:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+2145:             st.session_state.bp_view_mode = "sales"
+2146:             st.rerun()
+2147:     with bp_tog_col2:
+2148:         if st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2149:                      type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary"):
+2150:             st.session_state.bp_view_mode = "quantity"
+2151:             st.rerun()
+2152: 
+2153:     branch_perf = []
+2154:     branch_perf_qty = []
+2155:     def find_target_column(df, candidates):
+2156:         for c in candidates:
+2157:             if c in df.columns:
+2158:                 return c
+2159:         return None
+2160: 
+2161:     # Sales target columns
+2162:     col_s_b2b = find_target_column(branch_target, ["Sales Target | B2B", "Sales Target B2B", "B2B MTD Target"])
+2163:     col_s_b2c = find_target_column(branch_target, ["Sales Target | B2C", "Sales Target B2C", "B2C MTD Target"])
+2164:     col_s_total = find_target_column(branch_target, ["Sales Target | TOTAL", "Sales Target TOTAL", "Total Target"])
+2165: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:21:28Z
+Completed At: 2026-05-26T12:21:28Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 1650 to 1700
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1650:                         marker: { size: 8, color: '#d97706', line: { color: 'white', width: 1.5 } }
+1651:                     }]
+1652:                 }, {
+1653:                     transition: { duration: lineStagger, easing: 'cubic-in-out' },
+1654:                     frame: { duration: lineStagger, redraw: true }
+1655:                 });
+1656:             }
+1657:         }
+1658: 
+1659:         // Entrance: container slide up, then chart animates
+1660:         setTimeout(() => {
+1661:             document.getElementById('chart-wrapper').classList.add('revealed');
+1662:         }, 100);
+1663:         setTimeout(runAnimation, 700);
+1664:     </script>
+1665: </body>
+1666: </html>
+1667:     """.replace('__LABELS__', json.dumps(labels_list)) \
+1668:        .replace('__SALES__', json.dumps(sales_list)) \
+1669:        .replace('__ACH__', json.dumps(ach_list)) \
+1670:        .replace('__Y1MAX__', str(y1_max)) \
+1671:        .replace('__Y2MAX__', str(y2_max))
+1672: 
+1673:     components.html(animated_chart_html, height=540)
+1674: 
+1675:     # المبيعات حسب البراند, Customer Type, and Top/Bottom Branches — 3 columns
+1676:     st.markdown("""
+1677:     <style>
+1678:     /* Chart card styling for the 3-column row */
+1679:     .chart-card {
+1680:         background: #ffffff;
+1681:         border-radius: 16px;
+1682:         padding: 20px 16px 12px 16px;
+1683:         box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04);
+1684:         border: 1px solid rgba(148,163,184,0.12);
+1685:         position: relative;
+1686:         overflow: hidden;
+1687:         transition: box-shadow 0.3s ease, transform 0.3s ease;
+1688:     }
+1689:     .chart-card:hover {
+1690:         box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.06);
+1691:         transform: translateY(-2px);
+1692:     }
+1693:     .chart-card::before {
+1694:         content: '';
+1695:         position: absolute;
+1696:         top: 0; left: 0; right: 0;
+1697:         height: 4px;
+1698:         border-radius: 16px 16px 0 0;
+1699:     }
+1700:     .card-brand::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:22:16Z
+Completed At: 2026-05-26T12:22:16Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2000 to 2150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2000:         """.replace('__TOP_LABELS__', json.dumps(top5_labels)) \
+2001:            .replace('__TOP_VALUES__', json.dumps(top5_values)) \
+2002:            .replace('__BOT_LABELS__', json.dumps(bottom5_labels)) \
+2003:            .replace('__BOT_VALUES__', json.dumps(bottom5_values)) \
+2004:            .replace('__GLOBAL_MAX__', str(global_max))
+2005:         components.html(branch_rank_html, height=400)
+2006:         st.markdown('</div>', unsafe_allow_html=True)
+2007: 
+2008: 
+2009:     def pct_cell_style(val):
+2010:         import math
+2011:         try:
+2012:             v = float(val)
+2013:             if math.isnan(v):
+2014:                 return ""
+2015:         except Exception:
+2016:             return ""
+2017:         if v < 70:
+2018:             return "color:white; background-color:#d9534f"
+2019:         elif v < 90:
+2020:             return "color:black; background-color:#f0ad4e"
+2021:         else:
+2022:             return "color:black; background-color:#5cb85c"
+2023: 
+2024:     def fmt_pct(val):
+2025:         import math
+2026:         try:
+2027:             v = float(val)
+2028:             if math.isnan(v):
+2029:                 return ""
+2030:         except Exception:
+2031:             return ""
+2032:         return f"{v:.1f}%"
+2033: 
+2034:     section_header("account_tree", "Branch Performance")
+2035: 
+2036:     if "bp_view_mode" not in st.session_state:
+2037:         st.session_state.bp_view_mode = "sales"
+2038: 
+2039:     # Define active toggle button styles dynamically based on the active mode
+2040:     if st.session_state.bp_view_mode == "sales":
+2041:         btn_bg = "l
+<truncated 4389 bytes>
+0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2125:         mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2126:         -webkit-mask-size: contain;
+2127:         mask-size: contain;
+2128:     }
+2129:     </style>
+2130:     <div class="bp-toggle-container">
+2131:     """.replace("__BORDER__", container_border) \
+2132:        .replace("__BTN_BG__", btn_bg) \
+2133:        .replace("__BTN_SHADOW__", btn_shadow)
+2134: 
+2135:     st.markdown(toggle_css, unsafe_allow_html=True)
+2136: 
+2137:     bp_tog_col1, bp_tog_col2, _ = st.columns([0.8, 0.9, 8])
+2138:     with bp_tog_col1:
+2139:         if st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2140:                      type="primary" if st.session_state.bp_view_mode == "sales" else "secondary"):
+2141:             st.session_state.bp_view_mode = "sales"
+2142:             st.rerun()
+2143:     with bp_tog_col2:
+2144:         if st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2145:                      type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary"):
+2146:             st.session_state.bp_view_mode = "quantity"
+2147:             st.rerun()
+2148: 
+2149:     st.markdown("</div>", unsafe_allow_html=True)
+2150: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:22:58Z
+Completed At: 2026-05-26T12:22:58Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2150 to 2250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2150: 
+2151:     branch_perf = []
+2152:     branch_perf_qty = []
+2153:     def find_target_column(df, candidates):
+2154:         for c in candidates:
+2155:             if c in df.columns:
+2156:                 return c
+2157:         return None
+2158: 
+2159:     # Sales target columns
+2160:     col_s_b2b = find_target_column(branch_target, ["Sales Target | B2B", "Sales Target B2B", "B2B MTD Target"])
+2161:     col_s_b2c = find_target_column(branch_target, ["Sales Target | B2C", "Sales Target B2C", "B2C MTD Target"])
+2162:     col_s_total = find_target_column(branch_target, ["Sales Target | TOTAL", "Sales Target TOTAL", "Total Target"])
+2163: 
+2164:     # Quantity target columns
+2165:     col_q_b2b = find_target_column(branch_target, ["Quantity Target | B2B", "Quantity Target B2B"])
+2166:     col_q_b2c = find_target_column(branch_target, ["Quantity Target | B2C", "Quantity Target B2C"])
+2167:     col_q_total = find_target_column(branch_target, ["Quantity Target | TOTAL", "Quantity Target TOTAL"])
+2168: 
+2169:     for branch in selected_branches:
+2170:         target_row = branch_target[branch_target["Branch"] == branch]
+2171:         if target_row.empty:
+2172:             continue
+2173: 
+2174:         target_b2b = float(target_row[col_s_b2b].values[0]) * factor if col_s_b2b else 0
+2175:         target_b2c = float(target_row[col_s_b2c].values[0]) * factor if col_s_b2c else 0
+2176:         target_total = float(target_row[col_s_total].values[0]) * factor if col_s_total else 0
+2177: 
+2178:         qt_b2b = float(target_row[col_q_b2b].values[0]) * factor if col_q_b2b else 0
+2179:         qt_b2c = float
+<truncated 2248 bytes>
+ else None,
+2212:         })
+2213: 
+2214:     # --- Sort branches by brand priority ---
+2215:     brand_priority = {
+2216:         "EXP": 0, "NS": 1, "ED": 2, "DOMYAT": 3, "DOMYAT/EXP": 3, 
+2217:         "SHOP IN SHOP": 4, "OTHER CHANNEL": 5, "AND OTHER": 6, "OTHER": 7
+2218:     }
+2219:     def _get_branch_brand(branch_name):
+2220:         """Get the brand for a branch from branch_target or sales data."""
+2221:         if "Brand" in branch_target.columns:
+2222:             row = branch_target[branch_target["Branch"] == branch_name]
+2223:             if not row.empty and pd.notna(row["Brand"].values[0]):
+2224:                 return str(row["Brand"].values[0]).strip()
+2225:         # Fallback: check sales data
+2226:         br_data = filtered_sales[filtered_sales[branch_column] == branch_name]
+2227:         if not br_data.empty and brand_column in br_data.columns:
+2228:             return str(br_data[brand_column].mode().iloc[0]) if not br_data[brand_column].mode().empty else "ZZZ"
+2229:         return "ZZZ"
+2230: 
+2231:     def _brand_sort_key(item):
+2232:         brand = _get_branch_brand(item["Branch"])
+2233:         brand_upper = str(brand).upper().strip()
+2234:         # Find the priority by searching for substring or exact match
+2235:         for key, val in brand_priority.items():
+2236:             if key in brand_upper:
+2237:                 return val
+2238:         return 99 # Default for any other brands
+2239: 
+2240:     branch_perf.sort(key=_brand_sort_key)
+2241:     branch_perf_qty.sort(key=_brand_sort_key)
+2242: 
+2243:     def _pct_badge(val):
+2244:         import math
+2245:         try:
+2246:             v = float(val)
+2247:             if math.isnan(v):
+2248:                 return '<span class="bp-badge bp-na">-</span>'
+2249:         except Exception:
+2250:             return '<span class="bp-badge bp-na">-</span>'
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:23:05Z
+Completed At: 2026-05-26T12:23:05Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2250 to 2400
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2250:             return '<span class="bp-badge bp-na">-</span>'
+2251:         if v < 70:
+2252:             return f'<span class="bp-badge bp-red">{v:.1f}%</span>'
+2253:         elif v < 90:
+2254:             return f'<span class="bp-badge bp-amber">{v:.1f}%</span>'
+2255:         else:
+2256:             return f'<span class="bp-badge bp-green">{v:.1f}%</span>'
+2257: 
+2258:     def _fmt_num(val):
+2259:         import math
+2260:         try:
+2261:             v = float(val)
+2262:             if math.isnan(v):
+2263:                 return "-"
+2264:         except Exception:
+2265:             return "-"
+2266:         return f"{v:,.0f}"
+2267: 
+2268:     def _raw_val(val):
+2269:         import math
+2270:         try:
+2271:             v = float(val)
+2272:             if math.isnan(v):
+2273:                 return 0
+2274:             return v
+2275:         except Exception:
+2276:             return 0
+2277: 
+2278:     _BP_CSS_JS = """<style>
+2279: :root {
+2280:   --bp-primary: #6366f1;
+2281:   --bp-primary-rgb: 99, 102, 241;
+2282:   --bp-accent: #818cf8;
+2283: }
+2284: *{margin:0;padding:0;box-sizing:border-box}
+2285: body{font-family:'Outfit','Cairo',sans-serif;background:transparent;margin:0;padding:0;}
+2286: .bp-scroll{width:100%;overflow-x:auto;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bp-primary) rgba(255,255,255,0.05)}
+2287: .bp-scroll::-webkit-scrollbar{width:8px;height:8px}
+2288: .bp-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:4px}
+2289: .bp-scroll::-webkit-scrollbar-thumb{background:rgba(var(--bp-primary-rgb),0.5);border-radius:4px;border:2px 
+<truncated 5041 bytes>
+         row_h = 38
+2365:         header_h = 75
+2366:         total_row_h = 40 if has_total else 0
+2367: 
+2368:         num_data = len(data_rows)
+2369:         visible_data = min(num_data, max_visible)
+2370: 
+2371:         # Capped height for scrolling container
+2372:         scroll_h = (visible_data * row_h) + header_h + total_row_h
+2373:         
+2374:         # Give iframe a generous height so it never shows its own scrollbar
+2375:         total_height = scroll_h + 30
+2376: 
+2377:         tbl = f'<div class="bp-scroll" style="height:{scroll_h}px; max-height:{scroll_h}px; overflow-y:auto;">'
+2378:         tbl += f'<table class="bp-table" id="{table_id}">'
+2379:         tbl += '<thead><tr class="bp-group-row">'
+2380:         for gn, gc in groups:
+2381:             cls = "bp-group-empty" if gn == "" else "bp-group-label"
+2382:             tbl += f'<th colspan="{len(gc)}" class="{cls}">{gn}</th>'
+2383:         tbl += '</tr><tr class="bp-header-row">'
+2384:         col_idx = 0
+2385:         for gn, gc in groups:
+2386:             for c in gc:
+2387:                 sortable = c not in branch_like
+2388:                 cls = "bp-col-branch" if c in branch_like else ("bp-col-pct" if c in pct_cols else "bp-col-num")
+2389:                 if sortable:
+2390:                     tbl += f'<th class="{cls} bp-sortable" onclick="bpSort(\'{table_id}\',{col_idx})">{nice_labels.get(c,c)} <span class="bp-si">&#8693;</span></th>'
+2391:                 else:
+2392:                     tbl += f'<th class="{cls}">{nice_labels.get(c,c)}</th>'
+2393:                 col_idx += 1
+2394:         tbl += '</tr></thead><tbody>'
+2395:         for row in data_rows:
+2396:             tbl += '<tr>'
+2397:             for gn, gc in groups:
+2398:                 for c in gc:
+2399:                     val = row.get(c, "")
+2400:                     raw = _raw_val(val)
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:23:47Z
+Completed At: 2026-05-26T12:23:47Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2705
+Total Bytes: 119048
+Showing lines 2400 to 2550
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2400:                     raw = _raw_val(val)
+2401:                     if c in branch_like:
+2402:                         tbl += f'<td class="bp-cell-branch" data-v="0">{val}</td>'
+2403:                     elif c in pct_cols:
+2404:                         tbl += f'<td class="bp-cell-pct" data-v="{raw}">{_pct_badge(val)}</td>'
+2405:                     else:
+2406:                         tbl += f'<td class="bp-cell-num" data-v="{raw}">{_fmt_num(val)}</td>'
+2407:             tbl += '</tr>'
+2408:         tbl += '</tbody>'
+2409:         
+2410:         if total_rows:
+2411:             tbl += '<tfoot>'
+2412:             for row in total_rows:
+2413:                 tbl += '<tr>'
+2414:                 for gn, gc in groups:
+2415:                     for c in gc:
+2416:                         val = row.get(c, "")
+2417:                         raw = _raw_val(val)
+2418:                         if c in branch_like:
+2419:                             tbl += f'<td class="bp-cell-branch" data-v="0">{val}</td>'
+2420:                         elif c in pct_cols:
+2421:                             tbl += f'<td class="bp-cell-pct" data-v="{raw}">{_pct_badge(val)}</td>'
+2422:                         else:
+2423:                             tbl += f'<td class="bp-cell-num" data-v="{raw}">{_fmt_num(val)}</td>'
+2424:                 tbl += '</tr>'
+2425:             tbl += '</tfoot>'
+2426:             
+2427:         tbl += '</table></div>'
+2428: 
+2429:         custom_css = _BP_CSS_JS.replace(":root {\n  --bp-primary: #6366f1;\n  --bp-primary-rgb: 99, 102, 241;\n  --bp-accent: #818cf8;\n}", theme_vars)
+2430:         full_h
+<truncated 6407 bytes>
+umn
+2525:     if brand_filter and brand_filter != "الكل":
+2526:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col] == brand_filter]
+2527:     elif channel_category == "Branch":
+2528:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col].isin(["EXP", "NS", "ED", "Domyat"])]
+2529:     elif channel_category == "Other Channel":
+2530:         sales_rep_data = sales_rep_data[sales_rep_data[rep_brand_col].isin(["Shop IN Shop", "Other Channel"])]
+2531: 
+2532:     # Build complete list of (Sales Rep, Branch) combinations from targets only
+2533:     all_pairs = []
+2534:     target_pairs = set()
+2535:     if isinstance(rep_target, pd.DataFrame) and "Sales Rep" in rep_target.columns and "Branch" in rep_target.columns:
+2536:         # Filter rep_target by selected branches and brand
+2537:         filtered_rep_target = rep_target[rep_target["Branch"].isin(selected_rep_branches)].copy()
+2538:         if brand_filter and brand_filter != "الكل" and "Brand" in filtered_rep_target.columns:
+2539:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"] == brand_filter]
+2540:         elif channel_category == "Branch" and "Brand" in filtered_rep_target.columns:
+2541:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"].isin(["EXP", "NS", "ED", "Domyat"])]
+2542:         elif channel_category == "Other Channel" and "Brand" in filtered_rep_target.columns:
+2543:             filtered_rep_target = filtered_rep_target[filtered_rep_target["Brand"].isin(["Shop IN Shop", "Other Channel"])]
+2544:         
+2545:         for _, row in filtered_rep_target.iterrows():
+2546:             r = row["Sales Rep"]
+2547:             b = row["Branch"]
+2548:             if pd.notna(r) and pd.notna(b):
+2549:                 target_pairs.add((str(r).strip(), str(b).strip()))
+2550: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+The USER performed the following action:
+Show the contents of file c:\Users\7maah\Desktop\app.py from lines 1986 to 2032
+File Path: `file:///c:/Users/7maah/Desktop/app.py`
+Total Lines: 2320
+Total Bytes: 99076
+Showing lines 1986 to 2032
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1986: 
+1987: // Initial animation
+1988: setTimeout(()=>{document.getElementById('wrap').classList.add('show')},100);
+1989: setTimeout(()=>animateBars(topLabels,topValues,topColors),500);
+1990: </script></body></html>
+1991:         """.replace('__TOP_LABELS__', json.dumps(top5_labels)) \
+1992:            .replace('__TOP_VALUES__', json.dumps(top5_values)) \
+1993:            .replace('__BOT_LABELS__', json.dumps(bottom5_labels)) \
+1994:            .replace('__BOT_VALUES__', json.dumps(bottom5_values)) \
+1995:            .replace('__GLOBAL_MAX__', str(global_max))
+1996:         components.html(branch_rank_html, height=00)
+1997:         st.markdown('</div>', unsafe_allow_html=True)
+1998: 
+1999:     section_header("account_tree", "Branch Performance")
+2000:     branch_perf = []
+2001:     def find_target_column(df, candidates):
+2002:         for c in candidates:
+2003:             if c in df.columns:
+2004:                 return c
+2005:         return None
+2006: 
+2007:     def pct_cell_style(val):
+2008:         import math
+2009:         try:
+2010:             v = float(val)
+2011:             if math.isnan(v):
+2012:                 return ""
+2013:         except Exception:
+2014:             return ""
+2015:         if v < 70:
+2016:             return "color:white; background-color:#d9534f"
+2017:         elif v < 90:
+2018:             return "color:black; background-color:#f0ad4e"
+2019:         else:
+2020:             return "color:black; background-color:#5cb85c"
+2021: 
+2022:     def fmt_pct(val):
+2023:         import math
+2024:         try:
+2025:             v = float(val)
+2026:             if math.isnan(v):
+2027:                 return ""
+2028:         except Exception:
+2029:             return ""
+2030:         return f"{v:.1f}%"
+2031: 
+2032:     col_s_b2b = find_target_column(branch_target, ["Sales Target | B2B", "Sales Target B2B", "B2B MTD Target"])
+
+
+---
+Created At: 2026-05-26T12:30:37Z
+Completed At: 2026-05-26T12:30:37Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2701
+Total Bytes: 120221
+Showing lines 2450 to 2520
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2450:         if st.session_state.bp_view_mode == "sales":
+2451:             if not branch_perf:
+2452:                 st.info("No branch targets available for selected filters.")
+2453:             else:
+2454:                 bp_df = pd.DataFrame(branch_perf)
+2455:                 totals = bp_df[["B2B MTD Target","Sales B2B","B2C MTD Target","Sales B2C","Total Target","Total Sales"]].sum()
+2456:                 totals_row = {
+2457:                     "Branch": "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a",
+2458:                     "B2B MTD Target": totals["B2B MTD Target"], "Sales B2B": totals["Sales B2B"],
+2459:                     "B2B %": (totals["Sales B2B"] / totals["B2B MTD Target"] * 100) if totals["B2B MTD Target"] else None,
+2460:                     "B2C MTD Target": totals["B2C MTD Target"], "Sales B2C": totals["Sales B2C"],
+2461:                     "B2C %": (totals["Sales B2C"] / totals["B2C MTD Target"] * 100) if totals["B2C MTD Target"] else None,
+2462:                     "Total Target": totals["Total Target"], "Total Sales": totals["Total Sales"],
+2463:                     "Sales %": (totals["Total Sales"] / totals["Total Target"] * 100) if totals["Total Target"] else None,
+2464:                 }
+2465:                 all_rows = branch_perf + [totals_row]
+2466:                 html, h = _build_perf_table("bp-branch-s", all_rows, bp_groups_sales, bp_nice,
+2467:                                          ["B2B %","B2C %","Sales %"], lambda r: r["Branch"] == "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a", is_quantity_mode=False)
+2468:                 import time
+2469:    
+<truncated 1848 bytes>
+  # Sales Rep Performance
+2495:     section_header("badge", "Sales Rep Performance")
+2496:     rep_perf = []
+2497:     col_r_b2b = find_target_column(rep_target, ["Sales Target | B2B", "Sales Target B2B", "B2B MTD Target"])
+2498:     col_r_b2c = find_target_column(rep_target, ["Sales Target | B2C", "Sales Target B2C", "B2C MTD Target"])
+2499:     col_r_total = find_target_column(rep_target, ["Sales Target | TOTAL", "Sales Target TOTAL", "Total Target"])
+2500: 
+2501:     # Sales Rep Performance should always use 'Branch based on sales reps' as branch source
+2502:     rep_branch_col = "Branch based on sales reps"
+2503:     rep_brand_col = "Brand based on sales reps"
+2504: 
+2505:     # Determine which rep-based branches to include based on the current branch selection.
+2506:     if branch_choice == "الكل":
+2507:         selected_rep_branches = selected_branches
+2508:     else:
+2509:         selected_rep_branches = [branch_choice]
+2510: 
+2511:     # تصفية الفروع المسموحة للبياعين بناءً على صلاحيات فروع المستخدم (من عمود Branch based on sales reps)
+2512:     if user_permission_type not in ["super_admin", "all_branches"] and st.session_state.user_branches:
+2513:         selected_rep_branches = [b for b in selected_rep_branches if b in st.session_state.user_branches]
+2514: 
+2515:     # Build sales data for reps using rep-based branch mapping, include returns for net calculation
+2516:     sales_rep_data = sales_df[sales_df[rep_branch_col].isin(selected_rep_branches) & sales_df["Sales Type"].isin(["Sales", "Return"])].copy()
+2517:     # Apply customer-type filter if set
+2518:     if cust_filter and cust_filter != "الكل":
+2519:         sales_rep_data = sales_rep_data[sales_rep_data["Customer Type"] == cust_filter]
+2520:     # Apply brand filter using rep-based brand column
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:33:37Z
+Completed At: 2026-05-26T12:33:37Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2703
+Total Bytes: 120326
+Showing lines 2350 to 2440
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2350:             btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+2351:             container_border = "1px solid rgba(99, 102, 241, 0.2)"
+2352:         else:
+2353:             btn_bg = "linear-gradient(135deg, #0d9488, #14b8a6)"
+2354:             btn_shadow = "0 4px 12px rgba(20, 184, 166, 0.3)"
+2355:             container_border = "1px solid rgba(20, 184, 166, 0.2)"
+2356: 
+2357:         toggle_css = """
+2358:         <div class="bp-toggle-marker" style="display:none;"></div>
+2359:         <style>
+2360:         /* Find the horizontal block that comes after the marker container */
+2361:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] {
+2362:             background: #0f172a !important;
+2363:             border: __BORDER__ !important;
+2364:             padding: 4px !important;
+2365:             border-radius: 12px !important;
+2366:             display: inline-flex !important;
+2367:             gap: 4px !important;
+2368:             width: auto !important;
+2369:             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+2370:         }
+2371:         
+2372:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+2373:             width: auto !important;
+2374:             flex: none !important;
+2375:         }
+2376:         
+2377:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button {
+<truncated 3043 bytes>
+mask-size: contain;
+2421:             mask-size: contain;
+2422:         }
+2423:         
+2424:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:nth-child(2) button::before {
+2425:             content: "";
+2426:             display: inline-block;
+2427:             width: 14px;
+2428:             height: 14px;
+2429:             background-color: currentColor;
+2430:             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2431:             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2432:             -webkit-mask-size: contain;
+2433:             mask-size: contain;
+2434:         }
+2435:         </style>
+2436:         """.replace("__BORDER__", container_border) \
+2437:            .replace("__BTN_BG__", btn_bg) \
+2438:            .replace("__BTN_SHADOW__", btn_shadow)
+2439: 
+2440:         st.markdown(toggle_css, unsafe_allow_html=True)
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:34:43Z
+Completed At: 2026-05-26T12:34:43Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2597
+Total Bytes: 119420
+Showing lines 2250 to 2280
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2250:         # Heights
+2251:         row_h = 38
+2252:         header_h = 75
+2253:         total_row_h = 40 if has_total else 0
+2254: 
+2255:         num_data = len(data_rows)
+2256:         visible_data = min        toggle_css = """<div class="bp-toggle-marker" style="display:none;"></div>
+2257: <style>
+2258: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] { background: #0f172a !important; border: __BORDER__ !important; padding: 4px !important; border-radius: 12px !important; display: inline-flex !important; gap: 4px !important; width: auto !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important; }
+2259: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] { width: auto !important; flex: none !important; }
+2260: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; height: 38px !important; padding: 0 20px !important; font-family: 'Outfit', 'Cairo', sans-serif !important; font-size: 13.5px !important; font-weight: 600 !important; letter-spacing: 0.3px !important; border: none !important; border-radius: 8px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; box-shadow: none !important; }
+2261: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[dat
+<truncated 2101 bytes>
+und-color: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center; -webkit-mask-size: contain; mask-size: contain; }
+2266: </style>data-testid="stHorizontalBlock"] div[data-testid="stColumn"] {
+2267:             width: auto !important;
+2268:             flex: none !important;
+2269:         }
+2270:         
+2271:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button {
+2272:             display: inline-flex !important;
+2273:             align-items: center !important;
+2274:             justify-content: center !important;
+2275:             gap: 8px !important;
+2276:             height: 38px !important;
+2277:             padding: 0 20px !important;
+2278:             font-family: 'Outfit', 'Cairo', sans-serif !important;
+2279:             font-size: 13.5px !important;
+2280:             font-weight: 600 !important;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:34:57Z
+Completed At: 2026-05-26T12:34:57Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2597
+Total Bytes: 119420
+Showing lines 2255 to 2320
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2255:         num_data = len(data_rows)
+2256:         visible_data = min        toggle_css = """<div class="bp-toggle-marker" style="display:none;"></div>
+2257: <style>
+2258: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] { background: #0f172a !important; border: __BORDER__ !important; padding: 4px !important; border-radius: 12px !important; display: inline-flex !important; gap: 4px !important; width: auto !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important; }
+2259: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] { width: auto !important; flex: none !important; }
+2260: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; height: 38px !important; padding: 0 20px !important; font-family: 'Outfit', 'Cairo', sans-serif !important; font-size: 13.5px !important; font-weight: 600 !important; letter-spacing: 0.3px !important; border: none !important; border-radius: 8px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; box-shadow: none !important; }
+2261: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button[kind="primary"] { background: __BTN_BG__ !important; color: #
+<truncated 4926 bytes>
+.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
+2301:             background: rgba(255, 255, 255, 0.05) !important;
+2302:             color: #e2e8f0 !important;
+2303:             border-color: rgba(255, 255, 255, 0.2) !important;
+2304:         }
+2305:         
+2306:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:first-child button::before {
+2307:             content: "";
+2308:             display: inline-block;
+2309:             width: 14px;
+2310:             height: 14px;
+2311:             background-color: currentColor;
+2312:             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
+2313:             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
+2314:             -webkit-mask-size: contain;
+2315:             mask-size: contain;
+2316:         }
+2317:         
+2318:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:nth-child(2) button::before {
+2319:             content: "";
+2320:             display: inline-block;
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:35:03Z
+Completed At: 2026-05-26T12:35:03Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2597
+Total Bytes: 119420
+Showing lines 2315 to 2360
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2315:             mask-size: contain;
+2316:         }
+2317:         
+2318:         div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"]:nth-child(2) button::before {
+2319:             content: "";
+2320:             display: inline-block;
+2321:             width: 14px;
+2322:             height: 14px;
+2323:             background-color: currentColor;
+2324:             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2325:             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+2326:             -webkit-mask-size: contain;
+2327:             mask-size: contain;
+2328:         }
+2329:         </style>
+2330:         "
+<truncated 276 bytes>
+lumns([0.8, 0.9, 8])
+2337:         with bp_tog_col1:
+2338:             st.button("Sales", key="bp_sales_btn", use_container_width=True,
+2339:                          type="primary" if st.session_state.bp_view_mode == "sales" else "secondary",
+2340:                          on_click=set_bp_mode, args=("sales",))
+2341:         with bp_tog_col2:
+2342:             st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2343:                          type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary",
+2344:                          on_click=set_bp_mode, args=("quantity",))
+2345: 
+2346:         if st.session_state.bp_view_mode == "sales":
+2347:             if not branch_perf:
+2348:                 st.info("No branch targets available for selected filters.")
+2349:             else:
+2350:                 bp_df = pd.DataFrame(branch_perf)
+2351:                 totals = bp_df[["B2B MTD Target","Sales B2B","B2C MTD Target","Sales B2C","Total Target","Total Sales"]].sum()
+2352:                 totals_row = {
+2353:                     "Branch": "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a",
+2354:                     "B2B MTD Target": totals["B2B MTD Target"], "Sales B2B": totals["Sales B2B"],
+2355:                     "B2B %": (totals["Sales B2B"] / totals["B2B MTD Target"] * 100) if totals["B2B MTD Target"] else None,
+2356:                     "B2C MTD Target": totals["B2C MTD Target"], "Sales B2C": totals["Sales B2C"],
+2357:                     "B2C %": (totals["Sales B2C"] / totals["B2C MTD Target"] * 100) if totals["B2C MTD Target"] else None,
+2358:                     "Total Target": totals["Total Target"], "Total Sales": totals["Total Sales"],
+2359:                     "Sales %": (totals["Total Sales"] / totals["Total Target"] * 100) if totals["Total Target"] else None,
+2360:                 }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:37:36Z
+Completed At: 2026-05-26T12:37:36Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2635
+Total Bytes: 122054
+Showing lines 2300 to 2350
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2300:                 tbl += '<tr>'
+2301:                 for gn, gc in groups:
+2302:                     for c in gc:
+2303:                         val = row.get(c, "")
+2304:                         raw = _raw_val(val)
+2305:                         if c in branch_like:
+2306:                             tbl += f'<td class="bp-cell-branch" data-v="0">{val}</td>'
+2307:                         elif c in pct_cols:
+2308:                             tbl += f'<td class="bp-cell-pct" data-v="{raw}">{_pct_badge(val)}</td>'
+2309:                         else:
+2310:                             tbl += f'<td class="bp-cell-num" data-v="{raw}">{_fmt_num(val)}</td>'
+2311:                 tbl += '</tr>'
+2312:             tbl += '</tfoot>'
+2313:             
+2314:         tbl += '</table></div>'
+2315: 
+2316:         custom_css = _BP_CSS_JS.replace(":root {\n  --bp-primary: #6366f1;\n  --bp-primary-rgb: 99, 102, 241;\n  --bp-accent: #818cf8;\n}", theme_vars)
+2317:         full_html = '<!DOCTYPE html><html><head><meta charset="utf-8">' + custom_css + '</head><body>' + tbl + '</body></html>'
+2318:         return full_html, total_height
+2319: 
+2320: 
+2321:     bp_groups_sales = [
+2322:         ("", ["Branch"]),
+2323:         ("B2B", ["B2B MTD Target", "Sales B2B", "B2B %"]),
+2324:         ("B2C", ["B2C MTD Target", "Sales B2C", "B2C %"]),
+2325:         ("TOTAL", ["Total Target", "Total Sales", "Sales %"]),
+2326:     ]
+2327:     bp_groups_qty = [
+2328:         ("", ["Branch"]),
+2329:         ("B2B", ["B2B Qty Target", "Qty B2B", "B2B %"]),
+2330:         ("B2C", ["B2C Qty Target", "Qty B2C", "B2C %"]),
+2331:         ("TOTAL", ["Total Qty Target", "Total Qty", "Qty %"]),
+2332:     ]
+2333:     bp_nice = {
+2334:         "Branch": "BRANCH", "Sales Rep": "SALES REP",
+2335:         "B2B MTD Target": "TARGET", "Sales B2B": "ACTUAL", "B2B %": "ACH %",
+2336:         "B2C MTD Target": "TARGET", "Sales B2C": "ACTUAL", "B2C %": "ACH %",
+2337:         "Total Target": "TARGET", "Total Sales": "ACTUAL", "Sales %": "ACH %",
+2338:         "B2B Qty Target": "TARGET", "Qty B2B": "ACTUAL",
+2339:         "B2C Qty Target": "TARGET", "Qty B2C": "ACTUAL",
+2340:         "Total Qty Target": "TARGET", "Total Qty": "ACTUAL", "Qty %": "ACH %",
+2341:     }
+2342: 
+2343:     @st.fragment
+2344:     def render_bp_section():
+2345:         if "bp_view_mode" not in st.session_state:
+2346:             st.session_state.bp_view_mode = "sales"
+2347: 
+2348:         if st.session_state.bp_view_mode == "sales":
+2349:             btn_bg = "linear-gradient(135deg, #4f46e5, #6366f1)"
+2350:             btn_shadow = "0 4px 12px rgba(99, 102, 241, 0.3)"
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:37:42Z
+Completed At: 2026-05-26T12:37:42Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2635
+Total Bytes: 122054
+Showing lines 2360 to 2400
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2360: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] div[data-testid="stColumn"] { width: auto !important; flex: none !important; }
+2361: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; height: 38px !important; padding: 0 20px !important; font-family: 'Outfit', 'Cairo', sans-serif !important; font-size: 13.5px !important; font-weight: 600 !important; letter-spacing: 0.3px !important; border: none !important; border-radius: 8px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; box-shadow: none !important; }
+2362: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button[kind="primary"] { background: __BTN_BG__ !important; color: #ffffff !important; box-shadow: __BTN_SHADOW__ !important; }
+2363: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button[kind="secondary"] { background: transparent !important; color: #64748b !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
+2364: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover { background: rgba(255, 255, 255, 0.05) !i
+<truncated 2967 bytes>
+st.session_state.bp_view_mode == "sales" else "secondary",
+2378:                          on_click=set_bp_mode, args=("sales",))
+2379:         with bp_tog_col2:
+2380:             st.button("Quantity", key="bp_qty_btn", use_container_width=True,
+2381:                          type="primary" if st.session_state.bp_view_mode == "quantity" else "secondary",
+2382:                          on_click=set_bp_mode, args=("quantity",))
+2383: 
+2384:         if st.session_state.bp_view_mode == "sales":
+2385:             if not branch_perf:
+2386:                 st.info("No branch targets available for selected filters.")
+2387:             else:
+2388:                 bp_df = pd.DataFrame(branch_perf)
+2389:                 totals = bp_df[["B2B MTD Target","Sales B2B","B2C MTD Target","Sales B2C","Total Target","Total Sales"]].sum()
+2390:                 totals_row = {
+2391:                     "Branch": "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a",
+2392:                     "B2B MTD Target": totals["B2B MTD Target"], "Sales B2B": totals["Sales B2B"],
+2393:                     "B2B %": (totals["Sales B2B"] / totals["B2B MTD Target"] * 100) if totals["B2B MTD Target"] else None,
+2394:                     "B2C MTD Target": totals["B2C MTD Target"], "Sales B2C": totals["Sales B2C"],
+2395:                     "B2C %": (totals["Sales B2C"] / totals["B2C MTD Target"] * 100) if totals["B2C MTD Target"] else None,
+2396:                     "Total Target": totals["Total Target"], "Total Sales": totals["Total Sales"],
+2397:                     "Sales %": (totals["Total Sales"] / totals["Total Target"] * 100) if totals["Total Target"] else None,
+2398:                 }
+2399:                 all_rows = branch_perf + [totals_row]
+2400:                 html, h = _build_perf_table("bp-branch-s", all_rows, bp_groups_sales, bp_nice,
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+The USER performed the following action:
+Show the contents of file c:\Users\7maah\Desktop\app.py from lines 1 to 46
+File Path: `file:///c:/Users/7maah/Desktop/app.py`
+Total Lines: 2320
+Total Bytes: 99076
+Showing lines 1 to 46
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import streamlit as st
+2: import pandas as pd
+3: import plotly.express as px
+4: import plotly.graph_objects as go
+5: from datetime import datetime, timedelta
+6: from pathlib import Path
+7: from typing import Optional
+8: import os
+9: import json
+10: import streamlit.components.v1 as components
+11: from streamlit_theme import st_theme
+12: 
+13: APP_DIR = Path(__file__).resolve().parent
+14: LIGHT_LOGO = APP_DIR / "assets" / "ns_logo.png"
+15: DARK_LOGO = APP_DIR / "assets" / "ns_logo_dark.png"
+16: 
+17: 
+18: def _is_dark_theme() -> bool:
+19:     theme = st_theme(key="ns_dashboard_theme")
+20:     if theme and isinstance(theme, dict):
+21:         return str(theme.get("base", "")).lower() == "dark"
+22:     return False
+23: 
+24: 
+25: def _active_logo_path() -> Optional[Path]:
+26:     if LIGHT_LOGO.is_file() and DARK_LOGO.is_file():
+27:         return DARK_LOGO if _is_dark_theme() else LIGHT_LOGO
+28:     if LIGHT_LOGO.is_file():
+29:         return LIGHT_LOGO
+30:     if DARK_LOGO.is_file():
+31:         return DARK_LOGO
+32:     return None
+33: 
+34: 
+35: def render_dashboard_header(title: str, logo_width: int = 110):
+36:     logo_path = _active_logo_path()
+37: 
+38:     if logo_path:
+39:         col_logo, col_title = st.columns([0.4, 7], vertical_alignment="center", gap="small")
+40:         with col_logo:
+41:             st.image(str(logo_path), width=logo_width)
+42:         with col_title:
+43:             st.title(title)
+44:     else:
+45:         st.title(title)
+46: 
+
+
+---
+Created At: 2026-05-26T12:44:19Z
+Completed At: 2026-05-26T12:44:19Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2368
+Total Bytes: 107653
+Showing lines 2360 to 2368
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2360: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stColumn"], div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="column"] { width: auto !important; flex: none !important; min-width: 0 !important; }
+2361: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] button { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; height: 38px !important; padding: 0 20px !important; font-family: 'Outfit', 'Cairo', sans-serif !important; font-size: 13.5px !important; font-weight: 600 !important; letter-spacing: 0.3px !important; border: none !important; border-radius: 8px !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; box-shadow: none !important; }
+2362: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] button[kind="primary"], div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] button[data-testid="baseButton-primary"] { background: __BTN_BG__ !important; color: #ffffff !important; box-shadow: __BTN_SHADOW__ !important; }
+2363: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] button[kind="secondary"], div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] button[data-testid="baseButton-secondary"] { background: transparent !important; color: #64748
+<truncated 1262 bytes>
+("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'%3E%3C/line%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'%3E%3C/path%3E%3C/svg%3E") no-repeat center; -webkit-mask-size: contain; mask-size: contain; }
+2366: div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="stColumn"]:nth-child(2) button::before, div[data-testid="element-container"]:has(.bp-toggle-marker) ~ div[data-testid="element-container"] div[data-testid="column"]:nth-child(2) button::before { content: ""; display: inline-block; width: 14px; height: 14px; background-color: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'%3E%3C/path%3E%3Cpolyline points='3.27 6.96 12 12.01 20.73 6.96'%3E%3C/polyline%3E%3Cline x1='12' y1='22.08' x2='12' y2='12'%3E%3C/line%3E%3C/svg%3E") no-repeat center; -webkit-mask-size: contain; mask-size: contain; }
+2367: </style>"""
+2368: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+---
+Created At: 2026-05-26T12:47:03Z
+Completed At: 2026-05-26T12:47:03Z
+File Path: `file:///C:/Users/7maah/Desktop/app.py`
+Total Lines: 2368
+Total Bytes: 107653
+Showing lines 2368 to 2368
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2368: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
